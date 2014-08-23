@@ -24,6 +24,7 @@ http://coolshell.cn/articles/1547.html
 #include <stdio.h>
 #include <string.h>
 
+#define lex_debug printf
 extern YYSTYPE yylval;
 %}
 
@@ -36,8 +37,6 @@ values [^ \r\n\t\{\}]+
 symbols [^ \n\t\{\};]+
 comment	#.*\n
 app	"application"
-
-%x START_APP
 
 %%
 <*>{whitespace} {
@@ -52,19 +51,20 @@ app	"application"
 	/* comment, do nothing */
 };
 
-{app} {
-    BEGIN START_APP;
-	return TOKEN_APPLICATION;
+{symbols} {
+    if(strcasecmp(yytext, "application") == 0) {
+        return TOKEN_APPLICATION;
+    } else if(strcasecmp(yytext, "sign") == 0){
+        return TOKEN_SIGNATURE;
+    } else {
+        yylval.ptr = strdup(yytext);
+        return TOKEN_SYMBOL;
+    }
 };
 
-<INITIAL,START_APP>{lbranch} {
+<INITIAL>{lbranch} {
 	BEGIN INITIAL;
 	return TOKEN_LBRANCH;
-};
-
-{symbols} {
-    yylval.ptr = strdup(yytext);
-	return TOKEN_SYMBOL;
 };
 
 {values} {

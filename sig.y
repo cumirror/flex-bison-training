@@ -1,52 +1,123 @@
 %{
 #include <stdio.h>
+#include <string.h>
+#include "application.h"
+#include "key_pair.h"
 
 void yyerror(char *s)
 {
     printf("ERROR: %s\n", s);
 }
 
+extern struct application_list* app_root;
 %}
 
 %union {
     char* ptr;
+    struct application_s* app;
+    struct sig_s* sig;
+    struct sig_list* sigs;
+    struct key_pair_s* pair;
+    struct key_pair_list* pairs;
 };
 
 %token <ptr> TOKEN_SYMBOL
 %token <ptr> TOKEN_VALUE
-%token TOKEN_COMMA TOKEN_LBRANCH TOKEN_RBRANCH TOKEN_APPLICATION
+%token TOKEN_COMMA TOKEN_LBRANCH TOKEN_RBRANCH TOKEN_APPLICATION TOKEN_SIGNATURE
 
-%type <ptr> app;
-%type <ptr> key_value_pair;
+%type <app> application;
+%type <sig> app_sig;
+%type <sigs> app_sig_list;
+%type <sigs> app_sig_node;
+%type <pair> key_value_pair;
+%type <pairs> key_value_list;
 
 %%
-apps:
-    apps app
-    | app
+applications:
+    applications application
+    {
+        STAILQ_INSERT_TAIL(app_root, $2, next);
+    }
+    | application
+    {
+        app_root = create_application_list();
+        STAILQ_INSERT_TAIL(app_root, $1, next);
+    }
     ;
 
-app:
-    TOKEN_APPLICATION TOKEN_LBRANCH key_value_list TOKEN_RBRANCH
+application:
+    TOKEN_APPLICATION TOKEN_LBRANCH key_value_list app_sig_node TOKEN_RBRANCH
     {
-        printf("application\n");
+        struct application_s *app = create_application();
+        app->id = get_int_value_from_key($3, "appid");
+        app->category = get_int_value_from_key($3, "category");
+        /* TODO: becareful the str length */
+        strcpy(app->name, get_str_value_from_key($3, "appname"));
+        app->sigs = $4;
+        /* TODO: free key value list */
+       
+        $$ = app;
     }
+
+app_sig_node:
+    TOKEN_SIGNATURE	TOKEN_LBRANCH app_sig_list TOKEN_RBRANCH
+    {
+        $$ = $3;
+    }
+    ;
+
+app_sig_list:
+    app_sig_list app_sig 
+    {
+        STAILQ_INSERT_TAIL($1, $2, next);
+        $$ = $1;
+    }
+    | app_sig 
+    {
+        struct sig_list *head =  create_sig_list();
+        STAILQ_INSERT_TAIL(head, $1, next);
+        $$ = head;
+    }
+ 
+app_sig:
+    TOKEN_SYMBOL TOKEN_LBRANCH key_value_list TOKEN_RBRANCH
+    {
+        struct sig_s *sig = create_sig();
+        sig->id = get_int_value_from_key($3, "sig_id");
+        //sig->proto = get_int_value_from_key($3, "sig_proto");
+        //sig->type = get_int_value_from_key($3, "sig_type");
+        sig->proto = get_sigProto_value($3);
+        sig->type = get_matchType_value($3);
+        sig->enable = get_int_value_from_key($3, "sig_enable");
+        sig->priority = get_int_value_from_key($3, "sig_priority");
+        /* TODO: becareful the str length */
+        strcpy(sig->match, get_str_value_from_key($3, "sig_match"));
+        /* TODO: free key value list */
+
+        $$ = sig;
+    }
+    ;
 
 key_value_list:
     key_value_list key_value_pair
     {
-        printf("list\n");
+        STAILQ_INSERT_TAIL($1, $2, next);
+        $$ = $1;
     }
     | key_value_pair
     {
-        printf("pair\n");
+        struct key_pair_list *head = create_pair_list();
+        STAILQ_INSERT_TAIL(head, $1, next);
+        $$ = head;
     }
     ;
 
 key_value_pair:
     TOKEN_SYMBOL TOKEN_VALUE TOKEN_COMMA
     {
-        printf("%s-%s\n", $1, $2);
+        $$ = create_key_value_pair($1, $2);
     }
     ;
+
 %%
 

@@ -1,9 +1,9 @@
 all:
 	make prepare 
-	gcc -o test lex.sig.c sig.tab.c test.c
+	gcc -o test lex.sig.c sig.tab.c key_pair.c application.c test.c
 
 clean:
-	rm -f lex.sig.c sig.tab.c *.h 
+	rm -f lex.sig.c sig.tab.c sig.tab.h 
 	rm -f test
 
 prepare: sig.tab.c lex.sig.c
