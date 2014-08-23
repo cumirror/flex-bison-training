@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include <assert.h>
 #include <string.h>
 #include "application.h"
 #include "key_pair.h"
@@ -49,14 +50,16 @@ application:
     TOKEN_APPLICATION TOKEN_LBRANCH key_value_list app_sig_node TOKEN_RBRANCH
     {
         struct application_s *app = create_application();
+        char *name = get_str_value_from_key($3, "appname");
         app->id = get_int_value_from_key($3, "appid");
         app->category = get_int_value_from_key($3, "category");
-        /* TODO: becareful the str length */
-        strcpy(app->name, get_str_value_from_key($3, "appname"));
+        assert(strlen(name) < MAX_APP_LENGTH);
+        strcpy(app->name, name);
         app->sigs = $4;
-        /* TODO: free key value list */
        
         $$ = app;
+
+        free_pair_list($3);
     }
 
 app_sig_node:
@@ -83,18 +86,18 @@ app_sig:
     TOKEN_SYMBOL TOKEN_LBRANCH key_value_list TOKEN_RBRANCH
     {
         struct sig_s *sig = create_sig();
+        char *match = get_str_value_from_key($3, "sig_match");
         sig->id = get_int_value_from_key($3, "sig_id");
-        //sig->proto = get_int_value_from_key($3, "sig_proto");
-        //sig->type = get_int_value_from_key($3, "sig_type");
         sig->proto = get_sigProto_value($3);
         sig->type = get_matchType_value($3);
         sig->enable = get_int_value_from_key($3, "sig_enable");
         sig->priority = get_int_value_from_key($3, "sig_priority");
-        /* TODO: becareful the str length */
-        strcpy(sig->match, get_str_value_from_key($3, "sig_match"));
-        /* TODO: free key value list */
+        assert(strlen(match) < MAX_SIG_LENGTH);
+        strcpy(sig->match, match);
 
         $$ = sig;
+
+        free_pair_list($3);
     }
     ;
 

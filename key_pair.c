@@ -14,6 +14,19 @@ inline struct key_pair_list* create_pair_list()
     return head;
 }
 
+inline void free_pair_list(struct key_pair_list *head)
+{
+    struct key_pair_s *pair = NULL;
+    struct key_pair_s *tpair = NULL;
+
+    STAILQ_FOREACH_SAFE(pair, head, next, tpair) {
+        free(pair->key);
+        free(pair->value);
+        free(pair);
+    }
+    free(head);
+}
+
 inline struct key_pair_s* create_key_value_pair(char* key, char* value)
 {
     struct key_pair_s *pair = NULL;
