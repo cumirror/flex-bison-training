@@ -92,6 +92,7 @@ app_sig:
         sig->type = get_matchType_value($3);
         sig->enable = get_int_value_from_key($3, "sig_enable");
         sig->priority = get_int_value_from_key($3, "sig_priority");
+        sig->dir = get_int_value_from_key($3, "sig_dir");
         assert(strlen(match) < MAX_SIG_LENGTH);
         strcpy(sig->match, match);
 

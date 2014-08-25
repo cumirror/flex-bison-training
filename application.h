@@ -13,6 +13,7 @@ struct sig_s {
 	uint type;
 	uint enable;
 	uint priority;
+	uint dir;
 	char match[MAX_SIG_LENGTH];
 	STAILQ_ENTRY(sig_s) next;
 };

@@ -36,6 +36,7 @@ void dump_applications(struct application_list* root)
             printf("\t\ttype     : %d\n", sig->type);
             printf("\t\tenable   : %d\n", sig->enable);
             printf("\t\tpriority : %d\n", sig->priority);
+            printf("\t\tdir      : %d\n", sig->dir);
             printf("\t\tmatch    : %s\n", sig->match);
         }
     }
